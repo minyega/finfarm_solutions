@@ -1,0 +1,30 @@
+{
+  "canisters": {
+    "finfarm_solutions_backend": {
+      "candid": "src/finfarm_solutions_backend/finfarm_solutions_backend.did",
+      "package": "finfarm_solutions_backend",
+      "type": "rust"
+    },
+    "finfarm_solutions_frontend": {
+      "dependencies": [
+        "finfarm_solutions_backend"
+      ],
+      "frontend": {
+        "entrypoint": "src/finfarm_solutions_frontend/src/index.html"
+      },
+      "source": [
+        "src/finfarm_solutions_frontend/assets",
+        "dist/finfarm_solutions_frontend/"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

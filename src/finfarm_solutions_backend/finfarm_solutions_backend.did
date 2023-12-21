@@ -1,0 +1,64 @@
+type Error = variant { NotFound : record { msg : text } };
+type Farm = record {
+  id : nat64;
+  tanks : vec Tank;
+  updated_at : opt nat64;
+  created_at : nat64;
+  farm_name : text;
+  location : text;
+};
+type FarmPayload = record { farm_name : text; location : text };
+type Fish = record {
+  id : nat64;
+  updated_at : opt nat64;
+  description : text;
+  age_in_months : nat64;
+  created_at : nat64;
+  quantity : nat64;
+  species : text;
+};
+type FishPayload = record {
+  description : text;
+  age_in_months : nat64;
+  quantity : nat64;
+  species : text;
+};
+type Result = variant { Ok : vec Fish; Err : Error };
+type Result_1 = variant { Ok : nat64; Err : Error };
+type Result_2 = variant { Ok : Farm; Err : Error };
+type Result_3 = variant { Ok : Fish; Err : Error };
+type Result_4 = variant { Ok : Tank; Err : Error };
+type Result_5 = variant { Ok; Err : Error };
+type Tank = record {
+  id : nat64;
+  updated_at : opt nat64;
+  current_stock : vec Fish;
+  created_at : nat64;
+  capacity_liters : nat64;
+  tank_name : text;
+};
+type TankPayload = record { capacity_liters : nat64; tank_name : text };
+service : {
+  batch_create_fish : (vec FishPayload) -> (Result);
+  check_tank_capacity : (nat64) -> (Result_1) query;
+  create_farm : (FarmPayload) -> (Result_2);
+  create_fish : (FishPayload) -> (Result_3);
+  create_tank : (TankPayload) -> (Result_4);
+  delete_farm : (nat64) -> (Result_5);
+  delete_fish : (nat64) -> (Result_5);
+  delete_tank : (nat64) -> (Result_5);
+  get_all_farms : () -> (vec Farm) query;
+  get_all_fish : () -> (vec Fish) query;
+  get_all_tanks : () -> (vec Tank) query;
+  get_farm : (nat64) -> (Result_2) query;
+  get_fish : (nat64) -> (Result_3) query;
+  get_tank : (nat64) -> (Result_4) query;
+  insert_fish_into_tank : (nat64, nat64) -> (Result_4);
+  insert_tank_into_farm : (nat64, nat64) -> (Result_2);
+  remove_fish_from_tank : (nat64, nat64) -> (Result_4);
+  remove_tank_from_farm : (nat64, nat64) -> (Result_2);
+  update_farm : (nat64, FarmPayload) -> (Result_2);
+  update_fish : (nat64, FishPayload) -> (Result_3);
+  update_fish_age : (nat64, nat64) -> (Result_3);
+  update_tank : (nat64, TankPayload) -> (Result_4);
+}

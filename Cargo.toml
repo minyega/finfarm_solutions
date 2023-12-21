@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "src/finfarm_solutions_backend",
+]
+resolver="2"
