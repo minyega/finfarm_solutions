@@ -6,12 +6,10 @@ use ic_stable_structures::{BoundedStorable, Cell, DefaultMemoryImpl, StableBTree
 use std::{borrow::Cow, cell::RefCell};
 use ic_cdk::api::time;
 
-
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 type IdCell = Cell<u64, Memory>;
 
-
-// Define a struct for Fish data
+/// Define a struct for Fish data
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct Fish {
     id: u64,
@@ -23,7 +21,7 @@ struct Fish {
     updated_at: Option<u64>,
 }
 
-// Define a struct for Tank data
+/// Define a struct for Tank data
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct Tank {
     id: u64,
@@ -34,7 +32,7 @@ struct Tank {
     updated_at: Option<u64>,
 }
 
-// Define a struct for Farm data
+/// Define a struct for Farm data
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct Farm {
     id: u64,
@@ -45,7 +43,7 @@ struct Farm {
     updated_at: Option<u64>,
 }
 
-// Implement Storable and BoundedStorable  traits for Fish struct
+/// Implement Storable and BoundedStorable traits for Fish struct
 impl Storable for Fish {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
@@ -61,7 +59,7 @@ impl BoundedStorable for Fish {
     const IS_FIXED_SIZE: bool = false;
 }
 
-// Implement Storable and BoundedStorable  traits for Tank struct
+/// Implement Storable and BoundedStorable traits for Tank struct
 impl Storable for Tank {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
@@ -77,9 +75,7 @@ impl BoundedStorable for Tank {
     const IS_FIXED_SIZE: bool = false;
 }
 
-
-// Implement Storable and BoundedStorable  traits for Farm struct
-
+/// Implement Storable and BoundedStorable traits for Farm struct
 impl Storable for Farm {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
@@ -95,8 +91,7 @@ impl BoundedStorable for Farm {
     const IS_FIXED_SIZE: bool = false;
 }
 
-
-// thread memory manager 
+// Thread memory manager
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
         MemoryManager::init(DefaultMemoryImpl::default())
@@ -128,14 +123,10 @@ thread_local! {
     static FARM_STORAGE: RefCell<StableBTreeMap<u64, Farm, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(6))))
     );
-
-
-
-
 }
 
-// Fish Payload data 
-#[derive(candid::CandidType, Clone, Serialize, Deserialize)]
+/// Fish Payload data
+#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct FishPayload {
     species: String,
     description: String,
@@ -143,36 +134,39 @@ struct FishPayload {
     age_in_months: u64,
 }
 
-// Tank Payload data
-#[derive(candid::CandidType, Clone, Serialize, Deserialize)]
+/// Tank Payload data
+#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct TankPayload {
     tank_name: String,
     capacity_liters: u64,
 }
 
-// Farm Payload data
-#[derive(candid::CandidType, Clone, Serialize, Deserialize)]
+/// Farm Payload data
+#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct FarmPayload {
     farm_name: String,
     location: String,
 }
 
-
-// create a new fish
+/// Creates a new fish with the provided payload.
 #[ic_cdk::update]
-fn create_fish(fish_payload: FishPayload) -> Result<Fish,Error> {
-    // payload Validation all in one line
-    if fish_payload.species.is_empty() || fish_payload.description.is_empty() || fish_payload.quantity == 0 || fish_payload.age_in_months == 0 {
+fn create_fish(fish_payload: FishPayload) -> Result<Fish, Error> {
+    // Payload Validation
+    if fish_payload.species.is_empty()
+        || fish_payload.description.is_empty()
+        || fish_payload.quantity == 0
+        || fish_payload.age_in_months == 0
+    {
         return Err(Error::NotFound {
             msg: format!("Invalid Fish Payload. Should not be empty or zero"),
         });
-    }   
+    }
     let id = FISH_ID_COUNTER
-    .with(|counter| {
-        let current_value = *counter.borrow().get();
-        counter.borrow_mut().set(current_value + 1)
-    })
-    .expect("cannot increment id counter");
+        .with(|counter| {
+            let current_value = *counter.borrow().get();
+            counter.borrow_mut().set(current_value + 1)
+        })
+        .expect("Cannot increment id counter");
 
     let fish = Fish {
         id,
@@ -189,15 +183,19 @@ fn create_fish(fish_payload: FishPayload) -> Result<Fish,Error> {
     Ok(fish)
 }
 
-// update a fish 
+/// Updates a fish with the provided payload.
 #[ic_cdk::update]
-fn update_fish(fish_id: u64, fish_payload: FishPayload) -> Result<Fish,Error> {
-    // payload Validation all in one line
-    if fish_payload.species.is_empty() || fish_payload.description.is_empty() || fish_payload.quantity == 0 || fish_payload.age_in_months == 0 {
+fn update_fish(fish_id: u64, fish_payload: FishPayload) -> Result<Fish, Error> {
+    // Payload Validation
+    if fish_payload.species.is_empty()
+        || fish_payload.description.is_empty()
+        || fish_payload.quantity == 0
+        || fish_payload.age_in_months == 0
+    {
         return Err(Error::NotFound {
             msg: format!("Invalid Fish Payload. Should not be empty or zero"),
         });
-    }   
+    }
     match FISH_STORAGE.with(|service| service.borrow().get(&fish_id)) {
         Some(mut fish) => {
             fish.species = fish_payload.species;
@@ -209,24 +207,23 @@ fn update_fish(fish_id: u64, fish_payload: FishPayload) -> Result<Fish,Error> {
             Ok(fish)
         }
         None => Err(Error::NotFound {
-            msg: format!("fish with id={} not found", fish_id),
+            msg: format!("Fish with id={} not found", fish_id),
         }),
     }
-
 }
 
-// batch create fish utility
+/// Batch creates fish with the provided payloads.
 #[ic_cdk::update]
-fn batch_create_fish(fish_payload: Vec<FishPayload>) -> Result<Vec<Fish>,Error> {
+fn batch_create_fish(fish_payload: Vec<FishPayload>) -> Result<Vec<Fish>, Error> {
     let mut fish_vec = Vec::new();
     for fish in fish_payload.iter() {
         let id = FISH_ID_COUNTER
-        .with(|counter| {
-            let current_value = *counter.borrow().get();
-            counter.borrow_mut().set(current_value + 1)
-        })
-        .expect("cannot increment id counter");
-    
+            .with(|counter| {
+                let current_value = *counter.borrow().get();
+                counter.borrow_mut().set(current_value + 1)
+            })
+            .expect("Cannot increment id counter");
+
         let fish = Fish {
             id,
             species: fish.species.clone(),
@@ -236,7 +233,7 @@ fn batch_create_fish(fish_payload: Vec<FishPayload>) -> Result<Vec<Fish>,Error> 
             created_at: time(),
             updated_at: None,
         };
-    
+
         FISH_STORAGE.with(|s| s.borrow_mut().insert(id, fish.clone()));
         fish_vec.push(fish);
     }
